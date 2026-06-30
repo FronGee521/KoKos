@@ -3,100 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  
-  <!-- PWA манифест встроенный -->
-  <link rel="manifest" id="manifest-link">
-  <script>
-    const manifest = {
-      name: "KoKos — Кулинарная книга",
-      short_name: "KoKos",
-      description: "Управляйте рецептами, планируйте меню и создавайте списки покупок",
-      start_url: "index.html",
-      display: "standalone",
-      background_color: "#f5faf8",
-      theme_color: "#1a9170",
-      icons: [
-        {
-          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%231a9170' rx='32'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle' fill='white' font-family='sans-serif'%3E🍳%3C/text%3E%3C/svg%3E",
-          sizes: "192x192",
-          type: "image/svg+xml",
-          purpose: "any maskable"
-        },
-        {
-          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%231a9170' rx='64'/%3E%3Ctext x='256' y='330' font-size='200' text-anchor='middle' fill='white' font-family='sans-serif'%3E🍳%3C/text%3E%3C/svg%3E",
-          sizes: "512x512",
-          type: "image/svg+xml",
-          purpose: "any maskable"
-        }
-      ]
-    };
-    
-    const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    document.getElementById('manifest-link').href = url;
-  </script>
-  
-  <!-- Service Worker встроенный -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      const swCode = `
-        const CACHE_NAME = 'kokos-v1';
-        const urlsToCache = ['index.html'];
-        
-        self.addEventListener('install', event => {
-          event.waitUntil(
-            caches.open(CACHE_NAME)
-              .then(cache => cache.addAll(urlsToCache))
-          );
-        });
-        
-        self.addEventListener('activate', event => {
-          event.waitUntil(
-            caches.keys().then(cacheNames => {
-              return Promise.all(
-                cacheNames.map(cacheName => {
-                  if (cacheName !== CACHE_NAME) {
-                    return caches.delete(cacheName);
-                  }
-                })
-              );
-            })
-          );
-        });
-        
-        self.addEventListener('fetch', event => {
-          event.respondWith(
-            caches.match(event.request)
-              .then(response => {
-                if (response) return response;
-                return fetch(event.request).then(response => {
-                  if (!response || response.status !== 200 || response.type !== 'basic') {
-                    return response;
-                  }
-                  const responseToCache = response.clone();
-                  caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, responseToCache);
-                  });
-                  return response;
-                });
-              })
-          );
-        });
-      `;
-      
-      const swBlob = new Blob([swCode], {type: 'application/javascript'});
-      const swUrl = URL.createObjectURL(swBlob);
-      
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register(swUrl).then(function(registration) {
-          console.log('✅ Service Worker зарегистрирован');
-        }).catch(function(error) {
-          console.log('❌ Ошибка SW:', error);
-        });
-      });
-    }
-  </script>
-  
+  <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Russo+One&display=swap" rel="stylesheet">
@@ -121,8 +28,8 @@
       color: #d4e6df;
     }
     
-    body.dark .card, body.dark .dialog-content, body.dark .main-menu,
-    body.dark .dropdown-menu, body.dark .cat-item, body.dark .settings-content {
+    body.dark .card, body.dark .dialog-content, body.dark .tab-container,
+    body.dark .cat-item, body.dark .settings-content {
       background: rgba(30, 47, 41, 0.8);
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
@@ -269,17 +176,28 @@
       color: #7ab8a0;
     }
 
-    /* ПЕРВЫЙ СЛОЙ ТАБОВ - основные */
+    /* ОБЩАЯ РАМКА ДЛЯ ДВУХ РЯДОВ ТАБОВ */
+    .tab-container {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 8px 8px 4px 8px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    }
+    
+    body.dark .tab-container {
+      background: rgba(30, 47, 41, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    /* ПЕРВЫЙ РЯД - основные табы */
     .main-menu {
       display: flex; 
       gap: 4px; 
-      margin-bottom: 8px;
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 40px; 
-      padding: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      margin-bottom: 6px;
     }
     .main-menu button.tab-btn {
       flex: 1; 
@@ -296,30 +214,19 @@
       font-family: 'Montserrat', sans-serif;
     }
     .main-menu button.tab-btn.active { 
-      background: rgba(26, 145, 112, 0.15);
+      background: rgba(26, 145, 112, 0.2);
       color: #1a9170; 
-    }
-    body.dark .main-menu {
-      background: rgba(30, 47, 41, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.05);
     }
     body.dark .main-menu button.tab-btn { color: #8ab0a0; }
     body.dark .main-menu button.tab-btn.active { 
-      background: rgba(26, 145, 112, 0.2);
+      background: rgba(26, 145, 112, 0.25);
       color: #2dbd94; 
     }
 
-    /* ВТОРОЙ СЛОЙ ТАБОВ - дополнительные */
+    /* ВТОРОЙ РЯД - дополнительные табы */
     .sub-menu {
       display: flex; 
-      gap: 4px; 
-      margin-bottom: 16px;
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 30px; 
-      padding: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      gap: 4px;
     }
     .sub-menu button.sub-tab-btn {
       flex: 1; 
@@ -336,16 +243,12 @@
       font-family: 'Montserrat', sans-serif;
     }
     .sub-menu button.sub-tab-btn.active { 
-      background: rgba(26, 145, 112, 0.12);
+      background: rgba(26, 145, 112, 0.15);
       color: #1a9170; 
-    }
-    body.dark .sub-menu {
-      background: rgba(30, 47, 41, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.05);
     }
     body.dark .sub-menu button.sub-tab-btn { color: #8ab0a0; }
     body.dark .sub-menu button.sub-tab-btn.active { 
-      background: rgba(26, 145, 112, 0.15);
+      background: rgba(26, 145, 112, 0.2);
       color: #2dbd94; 
     }
 
@@ -765,7 +668,6 @@ const SETTINGS_KEY = 'kokos_settings';
 let data = loadData();
 let settings = loadSettings();
 let currentTab = 'recipes';
-let currentSubTab = 'none';
 let editingId = null;
 let timerInterval = null;
 let tempPhotoData = null;
@@ -840,6 +742,7 @@ const app = document.getElementById('app');
 
 function render() {
   applyTheme();
+  
   const html = `
     <div class="top-bar">
       <div class="top-bar-left">
@@ -850,19 +753,22 @@ function render() {
       </div>
     </div>
     
-    <!-- ПЕРВЫЙ СЛОЙ - основные табы -->
-    <div class="main-menu">
-      <button class="tab-btn ${currentTab==='recipes'?'active':''}" data-tab="recipes">Рецепты</button>
-      <button class="tab-btn ${currentTab==='planner'?'active':''}" data-tab="planner">План</button>
-      <button class="tab-btn ${currentTab==='shopping'?'active':''}" data-tab="shopping">Покупки</button>
-      <button class="tab-btn ${currentTab==='timer'?'active':''}" data-tab="timer">Таймер</button>
-    </div>
-    
-    <!-- ВТОРОЙ СЛОЙ - дополнительные табы -->
-    <div class="sub-menu">
-      <button class="sub-tab-btn ${currentSubTab==='converter'?'active':''}" data-subtab="converter">Конвертер</button>
-      <button class="sub-tab-btn ${currentSubTab==='favorites'?'active':''}" data-subtab="favorites">Избранное</button>
-      <button class="sub-tab-btn ${currentSubTab==='random'?'active':''}" data-subtab="random">Случайный</button>
+    <!-- ОБЩАЯ РАМКА ДЛЯ ДВУХ РЯДОВ ТАБОВ -->
+    <div class="tab-container">
+      <!-- Первый ряд -->
+      <div class="main-menu">
+        <button class="tab-btn ${currentTab==='recipes'?'active':''}" data-tab="recipes">Рецепты</button>
+        <button class="tab-btn ${currentTab==='planner'?'active':''}" data-tab="planner">План</button>
+        <button class="tab-btn ${currentTab==='shopping'?'active':''}" data-tab="shopping">Покупки</button>
+        <button class="tab-btn ${currentTab==='timer'?'active':''}" data-tab="timer">Таймер</button>
+      </div>
+      
+      <!-- Второй ряд -->
+      <div class="sub-menu">
+        <button class="sub-tab-btn ${currentTab==='converter'?'active':''}" data-tab="converter">Конвертер</button>
+        <button class="sub-tab-btn ${currentTab==='favorites'?'active':''}" data-tab="favorites">Избранное</button>
+        <button class="sub-tab-btn ${currentTab==='random'?'active':''}" data-tab="random">Случайный</button>
+      </div>
     </div>
     
     <div id="pageContent">${renderPage()}</div>
@@ -872,28 +778,20 @@ function render() {
 }
 
 function renderPage() {
-  // Если выбран под-таб, показываем его
-  if (currentSubTab === 'converter') return renderConverter();
-  if (currentSubTab === 'favorites') { 
-    // Переключаемся на вкладку рецептов и фильтруем избранное
-    currentTab = 'recipes';
-    const html = renderRecipes();
-    setTimeout(() => filterFavorites(), 50);
-    return html;
-  }
-  if (currentSubTab === 'random') {
-    randomRecipe();
-    currentSubTab = 'none';
-    return renderPage();
-  }
-  
-  // Иначе показываем основной контент
   switch(currentTab) {
     case 'recipes': return renderRecipes();
     case 'planner': return renderPlanner();
     case 'shopping': return renderShopping();
     case 'timer': return renderTimer();
-    default: return '';
+    case 'converter': return renderConverter();
+    case 'favorites': 
+      const html = renderRecipes();
+      setTimeout(() => filterFavorites(), 50);
+      return html;
+    case 'random':
+      randomRecipe();
+      return renderRecipes();
+    default: return renderRecipes();
   }
 }
 
@@ -1059,29 +957,18 @@ function renderConverter() {
 // EVENTS
 // ============================================================
 function attachEvents() {
-  // Основные табы
+  // Основные табы (первый ряд)
   document.querySelectorAll('.main-menu button.tab-btn[data-tab]').forEach(btn=>{
     btn.onclick = ()=> { 
       currentTab = btn.dataset.tab; 
-      currentSubTab = 'none';
       render(); 
     };
   });
   
-  // Дополнительные табы (второй слой)
-  document.querySelectorAll('.sub-menu button.sub-tab-btn[data-subtab]').forEach(btn=>{
+  // Дополнительные табы (второй ряд)
+  document.querySelectorAll('.sub-menu button.sub-tab-btn[data-tab]').forEach(btn=>{
     btn.onclick = ()=> { 
-      const subtab = btn.dataset.subtab;
-      if (subtab === 'random') {
-        // Случайный рецепт сразу открывается
-        randomRecipe();
-        return;
-      }
-      if (currentSubTab === subtab) {
-        currentSubTab = 'none';
-      } else {
-        currentSubTab = subtab;
-      }
+      currentTab = btn.dataset.tab; 
       render(); 
     };
   });
@@ -1544,6 +1431,19 @@ render();
 console.log('🍳 KoKos приложение запущено');
 console.log('📦 Данные:', data);
 console.log('📝 Рецептов:', data.recipes ? data.recipes.length : 0);
+
+// Регистрация Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js')
+      .then(function(registration) {
+        console.log('✅ Service Worker зарегистрирован');
+      })
+      .catch(function(error) {
+        console.log('❌ Ошибка регистрации SW:', error);
+      });
+  });
+}
 </script>
 </body>
 </html>
