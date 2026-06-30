@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Russo+One&display=swap" rel="stylesheet">
+  <title>KoKos — Кулинарная книга</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f5faf8;
+      color: #1a2e28;
+      transition: background 0.2s, color 0.2s;
+      padding-bottom: 120px;
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    body.dark { background: #121e1a; color: #d4e6df; }
+    body.dark .card, body.dark .dialog-content, body.dark .main-menu,
+    body.dark .dropdown-menu, body.dark .cat-item, body.dark .settings-content {
+      background: #1e2f29; color: #d4e6df; border-color: #2d4a40;
+    }
+    body.dark input, body.dark textarea, body.dark select, body.dark .chip {
+      background: #2a4038; color: #d4e6df; border-color: #3d5f53;
+    }
+    body.dark .settings-item { border-color: #2d4a40; }
+    body.dark .settings-control select, body.dark .settings-control button {
+      background: #1e2f29; border-color: #2d4a40; color: #d4e6df;
+    }
+    body.dark .settings-control .btn-secondary {
+      background: #2d4a40; color: #d4e6df;
+    }
+    body.dark .dialog-content .btn-secondary {
+      background: #2d4a40; color: #d4e6df;
+    }
+    body.dark .fab { box-shadow: 0 6px 24px rgba(0,0,0,0.6); }
+    body.dark h3 { color: #7ab8a0; }
+    body.dark .main-menu { background: #1a2e28; }
+    
+    .app { max-width: 480px; margin: 0 auto; padding: 12px 16px; }
+    
+    h1 { font-family: 'Russo One', sans-serif; color: #1a9170; font-size: 28px; }
+    h2 { font-size: 20px; color: #1a9170; margin-bottom: 16px; }
+    h3 { font-size: 16px; margin: 12px 0 8px; color: #1a4d3d; }
+    
+    .brand { font-family: 'Russo One', sans-serif; color: #1a9170; }
+
+    /* Top bar - лого слева, настройки справа */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .top-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #1a9170;
+      padding: 4px 8px;
+      transition: transform 0.15s;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .top-btn:hover { transform: scale(1.1); }
+    .top-btn:active { transform: scale(0.95); }
+
+    /* Dropdown menu - бургер */
+    .menu-wrapper { position: relative; display: inline-block; }
+    .dropdown-menu {
+      position: absolute; right: 0; top: 40px;
+      background: white; border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      padding: 8px 0; min-width: 200px;
+      display: none; z-index: 50; border: 1px solid #dce8e2;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-menu button {
+      background: none; border: none; padding: 12px 20px;
+      width: 100%; text-align: left; font-size: 13px;
+      font-weight: 500; color: #1a2e28;
+      font-family: 'Montserrat', sans-serif; cursor: pointer;
+    }
+    .dropdown-menu button:hover { background: #e8f3ef; }
+    body.dark .dropdown-menu button { color: #d4e6df; }
+    body.dark .dropdown-menu button:hover { background: #2d4a40; }
+
+    /* Main menu - табы в кружок как было + бургер справа */
+    .main-menu {
+      display: flex; 
+      gap: 4px; 
+      margin-bottom: 16px;
+      background: #e8f3ef; 
+      border-radius: 40px; 
+      padding: 4px;
+      align-items: center;
+    }
+    .main-menu .menu-wrapper {
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .main-menu .menu-wrapper .top-btn {
+      font-size: 20px;
+      padding: 4px 10px;
+      color: #5a7a6e;
+    }
+    body.dark .main-menu .menu-wrapper .top-btn {
+      color: #8ab0a0;
+    }
+    .main-menu button.tab-btn {
+      flex: 1; 
+      min-width: 40px; 
+      padding: 10px 4px;
+      border: none; 
+      border-radius: 30px;
+      background: transparent; 
+      font-weight: 600; 
+      font-size: 11px;
+      color: #5a7a6e; 
+      cursor: pointer; 
+      transition: 0.15s;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .main-menu button.tab-btn.active { 
+      background: #1a9170; 
+      color: white; 
+    }
+    body.dark .main-menu { background: #1a2e28; }
+    body.dark .main-menu button.tab-btn { color: #8ab0a0; }
+    body.dark .main-menu button.tab-btn.active { background: #1a9170; color: white; }
+
+    /* FAB - большая кнопка добавления */
+    .fab {
+      position: fixed;
+      bottom: 100px;
+      right: 24px;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #1a9170;
+      color: white;
+      border: none;
+      font-size: 40px;
+      font-weight: 300;
+      box-shadow: 0 6px 28px rgba(26, 145, 112, 0.5);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-family: 'Montserrat', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      z-index: 90;
+      padding-bottom: 4px;
+    }
+    .fab:hover { transform: scale(1.05); }
+    .fab:active { transform: scale(0.92); }
+    body.dark .fab { box-shadow: 0 6px 28px rgba(0, 0, 0, 0.6); }
+
+    /* Cards */
+    .card {
+      background: white; border-radius: 24px; padding: 16px;
+      margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      border: 1px solid #dce8e2; transition: 0.15s;
+    }
+    .card-title { font-weight: 700; font-size: 16px; }
+    .card-sub { color: #5a7a6e; font-size: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .card img { width: 100%; max-height: 180px; object-fit: cover; border-radius: 16px; margin: 10px 0; background: #dce8e2; }
+
+    .chip {
+      background: #e8f3ef; padding: 4px 14px; border-radius: 30px;
+      font-size: 11px; font-weight: 600; color: #1a4d3d;
+      display: inline-block; border: none; cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+    }
+    body.dark .chip { background: #2d4a40; color: #b8d5c9; }
+
+    .star { color: #b0ccc0; font-size: 24px; cursor: pointer; user-select: none; }
+    .star.active { color: #f5b342; }
+
+    .cat-grid {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 12px; margin: 16px 0;
+    }
+    .cat-item {
+      background: #edf6f2; border-radius: 20px; padding: 12px 4px;
+      text-align: center; font-weight: 600; font-size: 12px;
+      border: 1px solid #d4e6df; cursor: pointer;
+      text-transform: capitalize;
+    }
+    body.dark .cat-item { background: #1f3f35; border-color: #2d5a4a; }
+    .cat-item .icon { font-size: 28px; display: block; margin-bottom: 4px; }
+
+    /* Dialog */
+    .dialog-overlay {
+      position: fixed; inset:0; background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(2px); display: flex;
+      align-items: center; justify-content: center; z-index: 200;
+      padding: 20px;
+    }
+    .dialog-content {
+      background: white; border-radius: 32px;
+      max-width: 400px; width: 100%; padding: 24px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .dialog-content h2 { margin-bottom: 16px; color: #1a9170; font-size: 18px; }
+    .dialog-content input, .dialog-content textarea, .dialog-content select {
+      width: 100%; padding: 12px 14px; border-radius: 16px;
+      border: 1px solid #d4e6df; font-family: 'Montserrat', sans-serif;
+      margin-bottom: 12px; font-size: 14px; background: #f8fcfb;
+    }
+    body.dark .dialog-content input, body.dark .dialog-content textarea,
+    body.dark .dialog-content select {
+      background: #1e2f29; border-color: #2d4a40; color: #d4e6df;
+    }
+    .dialog-content button {
+      background: #1a9170; border: none; padding: 12px 20px;
+      border-radius: 30px; font-weight: 700; color: white;
+      font-size: 14px; cursor: pointer; width: 100%;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .dialog-content .btn-secondary {
+      background: #d4e6df; color: #1a2e28; margin-top: 8px;
+    }
+    .photo-upload {
+      display: flex; gap: 8px; align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .photo-upload input[type="file"] {
+      display: none;
+    }
+    .photo-upload label {
+      padding: 10px 16px;
+      background: #e8f3ef;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a4d3d;
+      font-family: 'Montserrat', sans-serif;
+      border: 1px solid #d4e6df;
+    }
+    body.dark .photo-upload label {
+      background: #2a4038;
+      color: #d4e6df;
+      border-color: #3d5f53;
+    }
+    .photo-preview {
+      max-width: 100px;
+      max-height: 100px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 1px solid #dce8e2;
+    }
+    .photo-clear {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 190px; left: 20px; right: 20px;
+      max-width: 400px; margin: 0 auto;
+      background: #1a2e28; color: white; padding: 14px 20px;
+      border-radius: 40px; font-weight: 500; text-align: center;
+      z-index: 300; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      transition: 0.3s; opacity: 0; transform: translateY(20px);
+      pointer-events: none;
+      font-size: 13px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .flex-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .mt-8 { margin-top: 8px; }
+    .mb-8 { margin-bottom: 8px; }
+    .w-full { width: 100%; }
+
+    .ingredient-item, .step-item {
+      background: #edf6f2; padding: 8px 12px; border-radius: 30px;
+      margin: 4px 0; display: flex; justify-content: space-between;
+      font-size: 13px;
+    }
+    body.dark .ingredient-item, body.dark .step-item {
+      background: #1f3f35;
+    }
+
+    .timer-display {
+      font-size: 4rem; font-weight: 700; text-align: center;
+      letter-spacing: 4px; color: #1a9170;
+    }
+    .timer-controls {
+      display: flex; justify-content: center; gap: 16px; margin: 16px 0;
+    }
+    .timer-controls button {
+      background: #1a9170; border: none; padding: 12px 24px;
+      border-radius: 40px; font-weight: 700; color: white;
+      cursor: pointer; font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #b0ccc0; border-radius: 20px; }
+
+    /* Settings */
+    .settings-panel {
+      position: fixed; inset:0; background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px); z-index: 150;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .settings-panel.open { display: flex; }
+    .settings-content {
+      background: white; border-radius: 32px; max-width: 400px;
+      width: 100%; padding: 28px 24px; max-height: 90vh;
+      overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .settings-content h2 { color: #1a9170; margin-bottom: 20px; font-size: 18px; }
+    .settings-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 0; border-bottom: 1px solid #dce8e2;
+    }
+    body.dark .settings-item { border-color: #2d4a40; }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-label { font-weight: 600; font-size: 14px; }
+    .settings-control { display: flex; gap: 8px; align-items: center; }
+    .settings-control select, .settings-control button {
+      padding: 6px 14px; border-radius: 20px; border: 1px solid #d4e6df;
+      background: #f8fcfb; font-family: 'Montserrat', sans-serif;
+      font-size: 13px; cursor: pointer; font-weight: 500;
+    }
+    .settings-control .btn-primary {
+      background: #1a9170; color: white; border: none;
+    }
+    .settings-control .btn-secondary {
+      background: #d4e6df; color: #1a2e28; border: none;
+    }
+    .settings-close {
+      position: absolute; top: 16px; right: 20px;
+      background: none; border: none; font-size: 24px;
+      cursor: pointer; color: #5a7a6e;
+    }
+
+    #searchInput {
+      font-family: 'Montserrat', sans-serif;
+    }
+    
+    .capitalize {
+      text-transform: lowercase;
+    }
+    .capitalize::first-letter {
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+<div id="app" class="app"></div>
+<div id="toast" class="toast"></div>
+
+<!-- Settings Panel -->
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-content">
+    <button class="settings-close" id="settingsClose">✕</button>
+    <h2>Настройки</h2>
+    <div class="settings-item">
+      <span class="settings-label">Тема</span>
+      <div class="settings-control">
+        <select id="themeSelect">
+          <option value="light">Светлая</option>
+          <option value="dark">Тёмная</option>
+          <option value="auto">Авто</option>
+        </select>
+      </div>
+    </div>
+    <div class="settings-item">
+      <span class="settings-label">Язык</span>
+      <div class="settings-control">
+        <select id="langSelect">
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </div>
+    <div class="settings-item">
+      <span class="settings-label">Экспорт QR</span>
+      <div class="settings-control">
+        <button class="btn-primary" id="qrExportBtn">Экспорт</button>
+      </div>
+    </div>
+    <div class="settings-item">
+      <span class="settings-label">Импорт QR</span>
+      <div class="settings-control">
+        <button class="btn-secondary" id="qrImportBtn">Импорт</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="addRecipeBtn">+</button>
+
+<script>
+// ============================================================
+// DATA LAYER
+// ============================================================
+const STORAGE_KEY = 'kokos_data';
+const SETTINGS_KEY = 'kokos_settings';
+let data = loadData();
+let settings = loadSettings();
+let currentTab = 'recipes';
+let editingId = null;
+let timerInterval = null;
+let tempPhotoData = null;
+
+function defaultData() {
+  return { recipes: [], weekly: { mon:[], tue:[], wed:[], thu:[], fri:[], sat:[], sun:[] } };
+}
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : defaultData(); } 
+  catch(e) { return defaultData(); }
+}
+function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+function loadSettings() {
+  try { const raw = localStorage.getItem(SETTINGS_KEY); return raw ? JSON.parse(raw) : { theme: 'light', lang: 'ru' }; } 
+  catch(e) { return { theme: 'light', lang: 'ru' }; }
+}
+function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function toast(msg) { 
+  const t = document.getElementById('toast'); 
+  t.textContent = msg; 
+  t.classList.add('show'); 
+  setTimeout(()=>t.classList.remove('show'), 2200); 
+}
+
+function capitalize(str) {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// ============================================================
+// RENDER ENGINE
+// ============================================================
+const app = document.getElementById('app');
+function render() {
+  applyTheme();
+  const html = `
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <h1 class="brand">KoKos</h1>
+      </div>
+      <div class="top-bar-right">
+        <button class="top-btn" id="settingsBtn">⚙</button>
+      </div>
+    </div>
+    <div class="main-menu">
+      <button class="tab-btn ${currentTab==='recipes'?'active':''}" data-tab="recipes">Рецепты</button>
+      <button class="tab-btn ${currentTab==='planner'?'active':''}" data-tab="planner">План</button>
+      <button class="tab-btn ${currentTab==='shopping'?'active':''}" data-tab="shopping">Покупки</button>
+      <button class="tab-btn ${currentTab==='timer'?'active':''}" data-tab="timer">Таймер</button>
+      <div class="menu-wrapper">
+        <button class="top-btn" id="menuToggle">☰</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <button data-action="converter">Конвертер мер</button>
+          <button data-action="favorites">Избранное</button>
+          <button data-action="random">Случайный рецепт</button>
+        </div>
+      </div>
+    </div>
+    <div id="pageContent">${renderPage()}</div>
+  `;
+  app.innerHTML = html;
+  attachEvents();
+}
+
+function renderPage() {
+  switch(currentTab) {
+    case 'recipes': return renderRecipes();
+    case 'planner': return renderPlanner();
+    case 'shopping': return renderShopping();
+    case 'timer': return renderTimer();
+    default: return '';
+  }
+}
+
+// ============================================================
+// RECIPES
+// ============================================================
+function renderRecipes() {
+  const all = data.recipes;
+  const recent = [...all].sort((a,b)=> (b.date||'').localeCompare(a.date||'')).slice(0,3);
+  const popular = [...all].sort((a,b)=> (b.counter||0)-(a.counter||0)).slice(0,3);
+  const cats = ['завтраки','супы','салаты','горячее','выпечка','десерты','напитки','закуски'];
+  const icons = ['🍳','🥣','🥗','🍖','🥐','🍰','🥤','🍢'];
+  
+  let html = `
+    <div style="margin-bottom:12px;">
+      <input id="searchInput" placeholder="Поиск по названию, ингредиентам..." 
+        style="width:100%;padding:12px 16px;border-radius:40px;border:1px solid #d4e6df;background:white;font-size:14px;font-family:'Montserrat',sans-serif;">
+    </div>
+    <div class="cat-grid">
+      ${cats.map((c,i)=>`<div class="cat-item" data-cat="${c}"><span class="icon">${icons[i]}</span>${capitalize(c)}</div>`).join('')}
+    </div>
+    <h3>Недавно добавленные</h3>
+    ${recent.length?recent.map(r=>recipeCard(r)).join(''):'<p class="card">Нет рецептов</p>'}
+    <h3>Популярное</h3>
+    ${popular.length?popular.map(r=>recipeCard(r)).join(''):'<p class="card">Нет данных</p>'}
+    <h3>Все рецепты</h3>
+    ${all.length?all.map(r=>recipeCard(r)).join(''):'<p class="card">Добавьте первый рецепт</p>'}
+  `;
+  return html;
+}
+
+function recipeCard(r) {
+  const isFav = r.favorite || false;
+  return `<div class="card" data-id="${r.id}">
+    <div class="flex-between">
+      <span class="card-title">${r.name||'Без названия'}</span>
+      <span class="star ${isFav?'active':''}" data-id="${r.id}">${isFav?'★':'☆'}</span>
+    </div>
+    <div class="card-sub">
+      <span>${r.category?capitalize(r.category):''}</span>
+      <span>⏱ ${r.time||''}</span>
+      <span>${r.difficulty?capitalize(r.difficulty):''}</span>
+    </div>
+    ${r.photo?`<img src="${r.photo}" alt="photo">`:''}
+    <div class="flex-row" style="margin-top:8px;">
+      <button class="chip" data-action="view" data-id="${r.id}">Детали</button>
+      <button class="chip" data-action="edit" data-id="${r.id}">✎</button>
+      <button class="chip" data-action="delete" data-id="${r.id}">✕</button>
+      <button class="chip" data-action="share" data-id="${r.id}">Поделиться</button>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// PLANNER
+// ============================================================
+function renderPlanner() {
+  const days = ['mon','tue','wed','thu','fri','sat','sun'];
+  const dayLabels = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  let html = `<h2>Планировщик недели</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
+  days.forEach((d,i)=> {
+    const ids = data.weekly[d]||[];
+    const names = ids.map(id=>{ const rec = data.recipes.find(r=>r.id===id); return rec?rec.name:'?'; }).join(', ');
+    html += `<div class="card" style="padding:10px;">
+      <strong style="font-size:13px;">${dayLabels[i]}</strong><br>
+      <span style="font-size:13px;">${names||'—'}</span>
+      <div style="margin-top:6px;">
+        <button class="chip" data-action="addToDay" data-day="${d}">+</button>
+        <button class="chip" data-action="clearDay" data-day="${d}">✕</button>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+// ============================================================
+// SHOPPING
+// ============================================================
+function renderShopping() {
+  const allIds = Object.values(data.weekly).flat();
+  const ingMap = {};
+  allIds.forEach(id=>{
+    const rec = data.recipes.find(r=>r.id===id);
+    if(!rec) return;
+    (rec.ingredients||[]).forEach(ing=>{
+      const key = ing.name.toLowerCase();
+      if(!ingMap[key]) ingMap[key] = { name: ing.name, amount: 0, unit: ing.unit||'' };
+      ingMap[key].amount += parseFloat(ing.amount)||0;
+    });
+  });
+  let html = `<h2>Список покупок</h2><div>`;
+  if(Object.keys(ingMap).length === 0) {
+    html += `<p class="card">Нет запланированных рецептов</p>`;
+  } else {
+    html += Object.values(ingMap).map(ing=>`
+      <div class="ingredient-item"><span>${capitalize(ing.name)} ${ing.amount} ${ing.unit}</span><span>✓</span></div>
+    `).join('');
+  }
+  html += `</div>`;
+  return html;
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function renderTimer() {
+  return `<h2>Кухонный таймер</h2>
+    <div class="timer-display" id="timerDisplay">00:00</div>
+    <div class="timer-controls">
+      <button id="timerStart">Старт</button>
+      <button id="timerStop">Стоп</button>
+      <button id="timerReset">Сброс</button>
+    </div>
+    <div class="flex-row" style="justify-content:center;gap:12px;margin-top:8px;">
+      <input type="number" id="timerMin" placeholder="мин" style="width:70px;padding:8px;border-radius:20px;border:1px solid #d4e6df;font-family:'Montserrat',sans-serif;text-align:center;">
+      <input type="number" id="timerSec" placeholder="сек" style="width:70px;padding:8px;border-radius:20px;border:1px solid #d4e6df;font-family:'Montserrat',sans-serif;text-align:center;">
+      <button class="chip" id="timerSet">Установить</button>
+    </div>
+  `;
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+function attachEvents() {
+  // Main menu tabs
+  document.querySelectorAll('.main-menu button.tab-btn[data-tab]').forEach(btn=>{
+    btn.onclick = ()=> { currentTab = btn.dataset.tab; render(); };
+  });
+  
+  // Dropdown menu (бургер) - теперь в табах
+  document.getElementById('menuToggle')?.addEventListener('click', (e)=> {
+    document.getElementById('dropdownMenu').classList.toggle('open');
+    e.stopPropagation();
+  });
+  document.addEventListener('click', ()=> document.getElementById('dropdownMenu')?.classList.remove('open'));
+  
+  document.querySelectorAll('#dropdownMenu button[data-action]').forEach(btn=>{
+    btn.onclick = (e)=> { 
+      const action = e.target.dataset.action;
+      if(action === 'converter') showConverter();
+      else if(action === 'favorites') { currentTab='recipes'; render(); filterFavorites(); }
+      else if(action === 'random') randomRecipe();
+      document.getElementById('dropdownMenu').classList.remove('open');
+    };
+  });
+  
+  // Settings button
+  document.getElementById('settingsBtn')?.addEventListener('click', ()=> {
+    document.getElementById('settingsPanel').classList.add('open');
+    document.getElementById('themeSelect').value = settings.theme;
+    document.getElementById('langSelect').value = settings.lang;
+  });
+  
+  // FAB - Add recipe
+  document.getElementById('addRecipeBtn')?.addEventListener('click', ()=> showRecipeDialog());
+  
+  // Settings
+  document.getElementById('settingsClose')?.addEventListener('click', ()=> {
+    document.getElementById('settingsPanel').classList.remove('open');
+  });
+  document.getElementById('settingsPanel')?.addEventListener('click', (e)=> {
+    if(e.target === e.currentTarget) document.getElementById('settingsPanel').classList.remove('open');
+  });
+  
+  document.getElementById('themeSelect')?.addEventListener('change', function() {
+    settings.theme = this.value;
+    saveSettings();
+    applyTheme();
+    toast('Тема обновлена');
+  });
+  
+  document.getElementById('langSelect')?.addEventListener('change', function() {
+    settings.lang = this.value;
+    saveSettings();
+    render();
+    toast('Язык изменён');
+  });
+  
+  document.getElementById('qrExportBtn')?.addEventListener('click', exportQR);
+  document.getElementById('qrImportBtn')?.addEventListener('click', importQR);
+  
+  // Search
+  document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.card[data-id]').forEach(card=>{
+      const rec = data.recipes.find(r=>r.id===card.dataset.id);
+      if(!rec) return;
+      const match = rec.name.toLowerCase().includes(q) || 
+        (rec.ingredients||[]).some(i=>i.name.toLowerCase().includes(q)) || 
+        (rec.category||'').toLowerCase().includes(q);
+      card.style.display = match ? '' : 'none';
+    });
+  });
+  
+  // Category filter
+  document.querySelectorAll('.cat-item').forEach(el=>{
+    el.onclick = ()=> {
+      const cat = el.dataset.cat;
+      document.querySelectorAll('.card[data-id]').forEach(card=>{
+        const rec = data.recipes.find(r=>r.id===card.dataset.id);
+        card.style.display = rec && rec.category === cat ? '' : 'none';
+      });
+    };
+  });
+  
+  // Card actions
+  document.querySelectorAll('[data-action="view"]').forEach(el=>el.onclick = (e)=> showRecipeDetail(e.target.dataset.id));
+  document.querySelectorAll('[data-action="edit"]').forEach(el=>el.onclick = (e)=> showRecipeDialog(e.target.dataset.id));
+  document.querySelectorAll('[data-action="delete"]').forEach(el=>el.onclick = (e)=> { 
+    if(confirm('Удалить рецепт?')) { 
+      data.recipes = data.recipes.filter(r=>r.id!==e.target.dataset.id); 
+      saveData(); render(); toast('Удалено'); 
+    } 
+  });
+  document.querySelectorAll('[data-action="share"]').forEach(el=>el.onclick = (e)=> shareRecipe(e.target.dataset.id));
+  document.querySelectorAll('.star').forEach(el=>{
+    el.onclick = (e)=> {
+      const id = e.target.dataset.id;
+      const rec = data.recipes.find(r=>r.id===id);
+      if(rec) { rec.favorite = !rec.favorite; saveData(); render(); }
+    };
+  });
+  
+  // Planner
+  document.querySelectorAll('[data-action="addToDay"]').forEach(el=>{
+    el.onclick = (e)=> {
+      const day = e.target.dataset.day;
+      if(!data.recipes.length) return toast('Нет рецептов');
+      showSelectRecipe(day);
+    };
+  });
+  document.querySelectorAll('[data-action="clearDay"]').forEach(el=>{
+    el.onclick = (e)=> { data.weekly[e.target.dataset.day] = []; saveData(); render(); toast('День очищен'); };
+  });
+  
+  // Timer
+  document.getElementById('timerStart')?.addEventListener('click', startTimer);
+  document.getElementById('timerStop')?.addEventListener('click', stopTimer);
+  document.getElementById('timerReset')?.addEventListener('click', resetTimer);
+  document.getElementById('timerSet')?.addEventListener('click', ()=>{
+    const min = parseInt(document.getElementById('timerMin').value)||0;
+    const sec = parseInt(document.getElementById('timerSec').value)||0;
+    const total = min*60+sec;
+    if(total>0) { timerSeconds = total; updateTimerDisplay(); toast('Таймер установлен'); }
+  });
+}
+
+// ============================================================
+// THEME
+// ============================================================
+function applyTheme() {
+  if (settings.theme === 'dark' || (settings.theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.body.classList.add('dark');
+  } else {
+    document.body.classList.remove('dark');
+  }
+}
+
+// ============================================================
+// DIALOGS
+// ============================================================
+function showRecipeDialog(id=null) {
+  const rec = id ? data.recipes.find(r=>r.id===id) : null;
+  editingId = id;
+  tempPhotoData = rec ? rec.photo : null;
+  
+  const html = `
+    <div class="dialog-overlay" id="dialogOverlay">
+      <div class="dialog-content">
+        <h2>${rec ? 'Редактировать рецепт' : 'Новый рецепт'}</h2>
+        <input id="dName" placeholder="Название" value="${rec?rec.name:''}">
+        <select id="dCategory">
+          <option value="">Категория</option>
+          ${['завтраки','супы','салаты','горячее','выпечка','десерты','напитки','закуски'].map(c=>`<option value="${c}" ${rec&&rec.category===c?'selected':''}>${capitalize(c)}</option>`).join('')}
+        </select>
+        <input id="dTime" placeholder="Время (30 мин)" value="${rec?rec.time:''}">
+        <select id="dDifficulty">
+          <option value="легко" ${rec&&rec.difficulty==='легко'?'selected':''}>Легко</option>
+          <option value="средне" ${rec&&rec.difficulty==='средне'?'selected':''}>Средне</option>
+          <option value="сложно" ${rec&&rec.difficulty==='сложно'?'selected':''}>Сложно</option>
+        </select>
+        <textarea id="dIngredients" placeholder="Ингредиенты (каждый с новой строки: название количество ед)">${rec?(rec.ingredients||[]).map(i=>`${i.name} ${i.amount} ${i.unit}`).join('\n'):''}</textarea>
+        <textarea id="dSteps" placeholder="Шаги (каждый с новой строки)">${rec?(rec.steps||[]).join('\n'):''}</textarea>
+        
+        <div class="photo-upload">
+          <label for="photoInput">Выбрать фото</label>
+          <input type="file" id="photoInput" accept="image/*">
+          ${tempPhotoData ? `<img src="${tempPhotoData}" class="photo-preview" id="photoPreview"><button class="photo-clear" id="photoClear">✕</button>` : '<div id="photoPreviewContainer"></div>'}
+        </div>
+        
+        <button id="dSave">Сохранить</button>
+        <button class="btn-secondary" id="dCancel">Отмена</button>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+  
+  // Photo upload handler
+  document.getElementById('photoInput')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      tempPhotoData = event.target.result;
+      const container = document.getElementById('photoPreviewContainer') || document.getElementById('photoPreview')?.parentNode;
+      if (container) {
+        const existingImg = container.querySelector('.photo-preview');
+        if (existingImg) existingImg.remove();
+        const img = document.createElement('img');
+        img.src = tempPhotoData;
+        img.className = 'photo-preview';
+        img.id = 'photoPreview';
+        container.appendChild(img);
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'photo-clear';
+        clearBtn.textContent = '✕';
+        clearBtn.id = 'photoClear';
+        container.appendChild(clearBtn);
+        document.getElementById('photoClear')?.addEventListener('click', function() {
+          tempPhotoData = null;
+          const img = document.getElementById('photoPreview');
+          if (img) img.remove();
+          this.remove();
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  
+  // Photo clear handler
+  document.getElementById('photoClear')?.addEventListener('click', function() {
+    tempPhotoData = null;
+    const img = document.getElementById('photoPreview');
+    if (img) img.remove();
+    this.remove();
+  });
+  
+  document.getElementById('dSave').onclick = ()=>{
+    const name = document.getElementById('dName').value.trim();
+    if(!name) return toast('Введите название');
+    const category = document.getElementById('dCategory').value;
+    const time = document.getElementById('dTime').value;
+    const difficulty = document.getElementById('dDifficulty').value;
+    const ingLines = document.getElementById('dIngredients').value.split('\n').filter(l=>l.trim());
+    const ingredients = ingLines.map(line=>{
+      const parts = line.trim().split(' ');
+      const unit = parts.pop()||'';
+      const amount = parts.pop()||'';
+      const name = parts.join(' ')||line;
+      return { name, amount, unit };
+    });
+    const steps = document.getElementById('dSteps').value.split('\n').filter(l=>l.trim());
+    const photo = tempPhotoData || '';
+    
+    if(rec) {
+      Object.assign(rec, { name, category, time, difficulty, ingredients, steps, photo });
+      toast('Обновлено');
+    } else {
+      data.recipes.push({ 
+        id: genId(), name, category, time, difficulty, ingredients, steps, photo, 
+        favorite: false, date: new Date().toISOString(), counter: 0 
+      });
+      toast('Добавлено');
+    }
+    saveData(); render(); document.getElementById('dialogOverlay')?.remove();
+  };
+  document.getElementById('dCancel').onclick = ()=> document.getElementById('dialogOverlay')?.remove();
+  document.getElementById('dialogOverlay').onclick = (e)=> { if(e.target===e.currentTarget) e.target.remove(); };
+}
+
+function showRecipeDetail(id) {
+  const rec = data.recipes.find(r=>r.id===id);
+  if(!rec) return toast('Не найден');
+  const html = `
+    <div class="dialog-overlay" id="detailOverlay">
+      <div class="dialog-content">
+        <h2>${rec.name}</h2>
+        <p style="font-size:12px;">${rec.category?capitalize(rec.category):''} | ⏱ ${rec.time||''} | ${rec.difficulty?capitalize(rec.difficulty):''}</p>
+        ${rec.photo?`<img src="${rec.photo}" style="width:100%;border-radius:16px;">`:''}
+        <h4 style="font-size:13px;margin:12px 0 6px;">Ингредиенты</h4>
+        ${(rec.ingredients||[]).map(i=>`<div class="ingredient-item"><span>${capitalize(i.name)}</span><span>${i.amount} ${i.unit}</span></div>`).join('')}
+        <h4 style="font-size:13px;margin:12px 0 6px;">Шаги</h4>
+        ${(rec.steps||[]).map((s,i)=>`<div class="step-item">${i+1}. ${s}</div>`).join('')}
+        <button class="btn-secondary" id="closeDetail">Закрыть</button>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.getElementById('closeDetail').onclick = ()=> document.getElementById('detailOverlay')?.remove();
+  document.getElementById('detailOverlay').onclick = (e)=> { if(e.target===e.currentTarget) e.target.remove(); };
+}
+
+function showSelectRecipe(day) {
+  if(!data.recipes.length) return toast('Нет рецептов');
+  let html = `<div class="dialog-overlay" id="selectOverlay"><div class="dialog-content"><h2>Выберите рецепт</h2>`;
+  data.recipes.forEach(r=>{
+    html += `<button class="chip" style="display:block;width:100%;margin:4px 0;text-align:center;padding:10px;" data-id="${r.id}">${r.name}</button>`;
+  });
+  html += `<button class="btn-secondary" id="closeSelect">Отмена</button></div></div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.querySelectorAll('#selectOverlay .chip[data-id]').forEach(btn=>{
+    btn.onclick = ()=> {
+      if(!data.weekly[day]) data.weekly[day]=[];
+      if(!data.weekly[day].includes(btn.dataset.id)) {
+        data.weekly[day].push(btn.dataset.id);
+        const rec = data.recipes.find(r=>r.id===btn.dataset.id);
+        if(rec) rec.counter = (rec.counter||0)+1;
+        saveData(); render(); toast('Добавлен в план');
+      } else toast('Уже есть');
+      document.getElementById('selectOverlay')?.remove();
+    };
+  });
+  document.getElementById('closeSelect').onclick = ()=> document.getElementById('selectOverlay')?.remove();
+}
+
+function shareRecipe(id) {
+  const rec = data.recipes.find(r=>r.id===id);
+  if(!rec) return;
+  const text = `${rec.name}\n${rec.category?capitalize(rec.category):''} | ${rec.time||''}\nИнгредиенты: ${(rec.ingredients||[]).map(i=>`${i.name} ${i.amount} ${i.unit}`).join(', ')}\nШаги: ${(rec.steps||[]).join('; ')}`;
+  navigator.clipboard.writeText(text).then(()=>toast('Скопировано')).catch(()=>toast('Ошибка копирования'));
+}
+
+function filterFavorites() {
+  document.querySelectorAll('.card[data-id]').forEach(card=>{
+    const rec = data.recipes.find(r=>r.id===card.dataset.id);
+    card.style.display = rec && rec.favorite ? '' : 'none';
+  });
+}
+
+function randomRecipe() {
+  if(!data.recipes.length) return toast('Нет рецептов');
+  const r = data.recipes[Math.floor(Math.random()*data.recipes.length)];
+  showRecipeDetail(r.id);
+}
+
+// ============================================================
+// TIMER LOGIC
+// ============================================================
+let timerSeconds = 0;
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds/60);
+  const s = timerSeconds%60;
+  document.getElementById('timerDisplay').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function startTimer() {
+  if(timerInterval) return;
+  if(timerSeconds<=0) { toast('Установите время'); return; }
+  timerInterval = setInterval(()=>{ 
+    timerSeconds--; 
+    updateTimerDisplay(); 
+    if(timerSeconds<=0){ clearInterval(timerInterval); timerInterval=null; toast('Время вышло!'); } 
+  },1000);
+}
+function stopTimer() { clearInterval(timerInterval); timerInterval=null; }
+function resetTimer() { stopTimer(); timerSeconds=0; updateTimerDisplay(); }
+
+// ============================================================
+// CONVERTER
+// ============================================================
+function showConverter() {
+  const html = `<div class="dialog-overlay" id="convOverlay"><div class="dialog-content"><h2>Конвертер мер</h2>
+    <input id="convVal" placeholder="Количество" type="number" value="1">
+    <select id="convFrom">
+      <option value="g">Граммы</option>
+      <option value="ml">Миллилитры</option>
+      <option value="cup">Стаканы</option>
+      <option value="tbsp">Ст. ложки</option>
+      <option value="tsp">Ч. ложки</option>
+      <option value="pcs">Штуки</option>
+    </select>
+    <select id="convTo">
+      <option value="g">Граммы</option>
+      <option value="ml">Миллилитры</option>
+      <option value="cup">Стаканы</option>
+      <option value="tbsp">Ст. ложки</option>
+      <option value="tsp">Ч. ложки</option>
+      <option value="pcs">Штуки</option>
+    </select>
+    <button id="convCalc">Рассчитать</button>
+    <p id="convResult" style="text-align:center;margin:12px 0;font-weight:700;"></p>
+    <button class="btn-secondary" id="convClose">Закрыть</button>
+  </div></div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  
+  document.getElementById('convCalc').onclick = ()=>{
+    const val = parseFloat(document.getElementById('convVal').value)||0;
+    const from = document.getElementById('convFrom').value;
+    const to = document.getElementById('convTo').value;
+    const units = { g:1, ml:1, cup:240, tbsp:15, tsp:5, pcs:1 };
+    const result = val * (units[from]/units[to]);
+    document.getElementById('convResult').textContent = `${val} → ${result.toFixed(2)}`;
+  };
+  document.getElementById('convClose').onclick = ()=> document.getElementById('convOverlay')?.remove();
+  document.getElementById('convOverlay').onclick = (e)=> { if(e.target===e.currentTarget) e.target.remove(); };
+}
+
+// ============================================================
+// QR
+// ============================================================
+function exportQR() {
+  const json = JSON.stringify(data);
+  const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(json)}`;
+  const html = `<div class="dialog-overlay" id="qrOverlay"><div class="dialog-content"><h2>QR код</h2><img src="${url}" style="width:100%;"><button id="qrClose">Закрыть</button></div></div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.getElementById('qrClose').onclick = ()=> document.getElementById('qrOverlay')?.remove();
+}
+
+function importQR() {
+  const html = `<div class="dialog-overlay" id="importOverlay"><div class="dialog-content"><h2>Импорт из QR</h2><textarea id="qrData" placeholder='{"recipes":[...]}' style="height:120px;"></textarea><button id="qrImport">Импорт</button><button class="btn-secondary" id="qrImportCancel">Отмена</button></div></div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.getElementById('qrImport').onclick = ()=>{
+    try { 
+      const d = JSON.parse(document.getElementById('qrData').value); 
+      data = d; 
+      saveData(); 
+      render(); 
+      toast('Импорт успешен'); 
+    } catch(e){ toast('Ошибка формата'); }
+    document.getElementById('importOverlay')?.remove();
+  };
+  document.getElementById('qrImportCancel').onclick = ()=> document.getElementById('importOverlay')?.remove();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+applyTheme();
+render();
+</script>
+</body>
+</html>
