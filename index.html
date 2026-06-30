@@ -3,10 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- PWA манифест встроенный -->
+  <link rel="manifest" id="manifest-link">
+  <script>
+    const manifest = {
+      name: "KoKos — Кулинарная книга",
+      short_name: "KoKos",
+      description: "Управляйте рецептами, планируйте меню и создавайте списки покупок",
+      start_url: "index.html",
+      display: "standalone",
+      background_color: "#f5faf8",
+      theme_color: "#1a9170",
+      icons: [
+        {
+          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%231a9170' rx='32'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle' fill='white' font-family='sans-serif'%3E🍳%3C/text%3E%3C/svg%3E",
+          sizes: "192x192",
+          type: "image/svg+xml",
+          purpose: "any maskable"
+        },
+        {
+          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%231a9170' rx='64'/%3E%3Ctext x='256' y='330' font-size='200' text-anchor='middle' fill='white' font-family='sans-serif'%3E🍳%3C/text%3E%3C/svg%3E",
+          sizes: "512x512",
+          type: "image/svg+xml",
+          purpose: "any maskable"
+        }
+      ]
+    };
+    
+    const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    document.getElementById('manifest-link').href = url;
+  </script>
+  
+  <!-- Service Worker встроенный -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE_NAME = 'kokos-v1';
+        const urlsToCache = ['index.html'];
+        
+        self.addEventListener('install', event => {
+          event.waitUntil(
+            caches.open(CACHE_NAME)
+              .then(cache => cache.addAll(urlsToCache))
+          );
+        });
+        
+        self.addEventListener('activate', event => {
+          event.waitUntil(
+            caches.keys().then(cacheNames => {
+              return Promise.all(
+                cacheNames.map(cacheName => {
+                  if (cacheName !== CACHE_NAME) {
+                    return caches.delete(cacheName);
+                  }
+                })
+              );
+            })
+          );
+        });
+        
+        self.addEventListener('fetch', event => {
+          event.respondWith(
+            caches.match(event.request)
+              .then(response => {
+                if (response) return response;
+                return fetch(event.request).then(response => {
+                  if (!response || response.status !== 200 || response.type !== 'basic') {
+                    return response;
+                  }
+                  const responseToCache = response.clone();
+                  caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, responseToCache);
+                  });
+                  return response;
+                });
+              })
+          );
+        });
+      `;
+      
+      const swBlob = new Blob([swCode], {type: 'application/javascript'});
+      const swUrl = URL.createObjectURL(swBlob);
+      
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register(swUrl).then(function(registration) {
+          console.log('✅ Service Worker зарегистрирован');
+        }).catch(function(error) {
+          console.log('❌ Ошибка SW:', error);
+        });
+      });
+    }
+  </script>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Russo+One&display=swap" rel="stylesheet">
   <title>KoKos — Кулинарная книга</title>
+  
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
@@ -125,6 +220,19 @@
     }
     .star:hover { transform: scale(1.2); }
 
+    #installBanner {
+      display: none;
+      background: rgba(26,145,112,0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(26,145,112,0.2);
+      animation: fadeSlideUp 0.5s ease;
+    }
+    #installBanner.show { display: block; }
+    
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -161,60 +269,30 @@
       color: #7ab8a0;
     }
 
-    .menu-wrapper { position: relative; display: inline-block; }
-    .dropdown-menu {
-      position: absolute; right: 0; top: 50px;
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-      padding: 8px 0; min-width: 210px;
-      display: none; z-index: 50;
-      animation: glassAppear 0.3s ease;
-    }
-    .dropdown-menu.open { display: block; }
-    .dropdown-menu button {
-      background: none; border: none; padding: 12px 20px;
-      width: 100%; text-align: left; font-size: 13px;
-      font-weight: 500; color: #1a2e28;
-      font-family: 'Montserrat', sans-serif; cursor: pointer;
-      transition: all 0.2s ease;
-      border-radius: 8px;
-    }
-    .dropdown-menu button:hover { 
-      background: rgba(26, 145, 112, 0.1);
-      padding-left: 24px;
-    }
-    body.dark .dropdown-menu {
-      background: rgba(30, 47, 41, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    body.dark .dropdown-menu button { color: #d4e6df; }
-
+    /* ПЕРВЫЙ СЛОЙ ТАБОВ - основные */
     .main-menu {
       display: flex; 
       gap: 4px; 
-      margin-bottom: 16px;
+      margin-bottom: 8px;
       background: rgba(255, 255, 255, 0.3);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-radius: 40px; 
       padding: 4px;
-      align-items: center;
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    .main-menu .menu-wrapper { margin-left: auto; flex-shrink: 0; }
-    .main-menu .menu-wrapper .top-btn {
-      width: 38px; height: 38px; font-size: 18px;
-      background: rgba(255, 255, 255, 0.2);
-    }
     .main-menu button.tab-btn {
-      flex: 1; min-width: 40px; padding: 10px 4px;
-      border: none; border-radius: 30px;
-      background: transparent; font-weight: 600; font-size: 11px;
-      color: #5a7a6e; cursor: pointer; transition: all 0.3s;
+      flex: 1; 
+      min-width: 40px; 
+      padding: 10px 4px;
+      border: none; 
+      border-radius: 30px;
+      background: transparent; 
+      font-weight: 600; 
+      font-size: 11px;
+      color: #5a7a6e; 
+      cursor: pointer; 
+      transition: all 0.3s;
       font-family: 'Montserrat', sans-serif;
     }
     .main-menu button.tab-btn.active { 
@@ -228,6 +306,46 @@
     body.dark .main-menu button.tab-btn { color: #8ab0a0; }
     body.dark .main-menu button.tab-btn.active { 
       background: rgba(26, 145, 112, 0.2);
+      color: #2dbd94; 
+    }
+
+    /* ВТОРОЙ СЛОЙ ТАБОВ - дополнительные */
+    .sub-menu {
+      display: flex; 
+      gap: 4px; 
+      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 30px; 
+      padding: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .sub-menu button.sub-tab-btn {
+      flex: 1; 
+      min-width: 30px; 
+      padding: 8px 4px;
+      border: none; 
+      border-radius: 30px;
+      background: transparent; 
+      font-weight: 500; 
+      font-size: 10px;
+      color: #7a9a8a; 
+      cursor: pointer; 
+      transition: all 0.3s;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .sub-menu button.sub-tab-btn.active { 
+      background: rgba(26, 145, 112, 0.12);
+      color: #1a9170; 
+    }
+    body.dark .sub-menu {
+      background: rgba(30, 47, 41, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    body.dark .sub-menu button.sub-tab-btn { color: #8ab0a0; }
+    body.dark .sub-menu button.sub-tab-btn.active { 
+      background: rgba(26, 145, 112, 0.15);
       color: #2dbd94; 
     }
 
@@ -550,6 +668,17 @@
 <div id="app" class="app"></div>
 <div id="toast" class="toast"></div>
 
+<!-- Баннер установки PWA -->
+<div id="installBanner">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+    <span style="font-weight:600; font-size:14px;">📱 Установите приложение</span>
+    <div style="display:flex; gap:8px;">
+      <button id="installBtn" style="background:#1a9170; color:white; border:none; padding:8px 20px; border-radius:30px; font-weight:600; cursor:pointer; font-family:'Montserrat',sans-serif;">Установить</button>
+      <button id="closeInstallBanner" style="background:transparent; border:none; font-size:20px; cursor:pointer; color:#5a7a6e; padding:0 8px;">✕</button>
+    </div>
+  </div>
+</div>
+
 <!-- Settings Panel -->
 <div class="settings-panel" id="settingsPanel">
   <div class="settings-content">
@@ -594,6 +723,41 @@
 
 <script>
 // ============================================================
+// PWA УСТАНОВКА
+// ============================================================
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const banner = document.getElementById('installBanner');
+  if (banner) banner.classList.add('show');
+});
+
+document.getElementById('installBtn')?.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    if (result.outcome === 'accepted') {
+      console.log('✅ Пользователь установил приложение');
+      document.getElementById('installBanner').classList.remove('show');
+    } else {
+      console.log('❌ Пользователь отклонил установку');
+    }
+    deferredPrompt = null;
+  }
+});
+
+document.getElementById('closeInstallBanner')?.addEventListener('click', () => {
+  document.getElementById('installBanner').classList.remove('show');
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('🎉 Приложение установлено!');
+  document.getElementById('installBanner').classList.remove('show');
+});
+
+// ============================================================
 // DATA LAYER
 // ============================================================
 const STORAGE_KEY = 'kokos_data';
@@ -601,6 +765,7 @@ const SETTINGS_KEY = 'kokos_settings';
 let data = loadData();
 let settings = loadSettings();
 let currentTab = 'recipes';
+let currentSubTab = 'none';
 let editingId = null;
 let timerInterval = null;
 let tempPhotoData = null;
@@ -684,20 +849,22 @@ function render() {
         <button class="top-btn" id="settingsBtn">⚙</button>
       </div>
     </div>
+    
+    <!-- ПЕРВЫЙ СЛОЙ - основные табы -->
     <div class="main-menu">
       <button class="tab-btn ${currentTab==='recipes'?'active':''}" data-tab="recipes">Рецепты</button>
       <button class="tab-btn ${currentTab==='planner'?'active':''}" data-tab="planner">План</button>
       <button class="tab-btn ${currentTab==='shopping'?'active':''}" data-tab="shopping">Покупки</button>
       <button class="tab-btn ${currentTab==='timer'?'active':''}" data-tab="timer">Таймер</button>
-      <div class="menu-wrapper">
-        <button class="top-btn" id="menuToggle">☰</button>
-        <div class="dropdown-menu" id="dropdownMenu">
-          <button data-action="converter">Конвертер мер</button>
-          <button data-action="favorites">Избранное</button>
-          <button data-action="random">Случайный рецепт</button>
-        </div>
-      </div>
     </div>
+    
+    <!-- ВТОРОЙ СЛОЙ - дополнительные табы -->
+    <div class="sub-menu">
+      <button class="sub-tab-btn ${currentSubTab==='converter'?'active':''}" data-subtab="converter">Конвертер</button>
+      <button class="sub-tab-btn ${currentSubTab==='favorites'?'active':''}" data-subtab="favorites">Избранное</button>
+      <button class="sub-tab-btn ${currentSubTab==='random'?'active':''}" data-subtab="random">Случайный</button>
+    </div>
+    
     <div id="pageContent">${renderPage()}</div>
   `;
   app.innerHTML = html;
@@ -705,6 +872,22 @@ function render() {
 }
 
 function renderPage() {
+  // Если выбран под-таб, показываем его
+  if (currentSubTab === 'converter') return renderConverter();
+  if (currentSubTab === 'favorites') { 
+    // Переключаемся на вкладку рецептов и фильтруем избранное
+    currentTab = 'recipes';
+    const html = renderRecipes();
+    setTimeout(() => filterFavorites(), 50);
+    return html;
+  }
+  if (currentSubTab === 'random') {
+    randomRecipe();
+    currentSubTab = 'none';
+    return renderPage();
+  }
+  
+  // Иначе показываем основной контент
   switch(currentTab) {
     case 'recipes': return renderRecipes();
     case 'planner': return renderPlanner();
@@ -833,28 +1016,73 @@ function renderTimer() {
 }
 
 // ============================================================
+// CONVERTER
+// ============================================================
+function renderConverter() {
+  return `<h2>Конвертер мер</h2>
+    <div class="card">
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:600;font-size:13px;">Количество</label>
+        <input id="convVal" placeholder="Количество" type="number" value="1" style="margin-top:4px;">
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:12px;">
+        <div style="flex:1;">
+          <label style="font-weight:600;font-size:13px;">Из</label>
+          <select id="convFrom" style="margin-top:4px;">
+            <option value="g">Граммы</option>
+            <option value="ml">Миллилитры</option>
+            <option value="cup">Стаканы</option>
+            <option value="tbsp">Ст. ложки</option>
+            <option value="tsp">Ч. ложки</option>
+            <option value="pcs">Штуки</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label style="font-weight:600;font-size:13px;">В</label>
+          <select id="convTo" style="margin-top:4px;">
+            <option value="g">Граммы</option>
+            <option value="ml">Миллилитры</option>
+            <option value="cup">Стаканы</option>
+            <option value="tbsp">Ст. ложки</option>
+            <option value="tsp">Ч. ложки</option>
+            <option value="pcs">Штуки</option>
+          </select>
+        </div>
+      </div>
+      <button id="convCalc" class="chip" style="width:100%;padding:12px;font-size:14px;">Рассчитать</button>
+      <p id="convResult" style="text-align:center;margin:12px 0;font-weight:700;font-size:18px;"></p>
+    </div>
+  `;
+}
+
+// ============================================================
 // EVENTS
 // ============================================================
 function attachEvents() {
-  // Main menu tabs
+  // Основные табы
   document.querySelectorAll('.main-menu button.tab-btn[data-tab]').forEach(btn=>{
-    btn.onclick = ()=> { currentTab = btn.dataset.tab; render(); };
+    btn.onclick = ()=> { 
+      currentTab = btn.dataset.tab; 
+      currentSubTab = 'none';
+      render(); 
+    };
   });
   
-  // Dropdown menu
-  document.getElementById('menuToggle')?.addEventListener('click', (e)=> {
-    document.getElementById('dropdownMenu').classList.toggle('open');
-    e.stopPropagation();
-  });
-  document.addEventListener('click', ()=> document.getElementById('dropdownMenu')?.classList.remove('open'));
-  
-  document.querySelectorAll('#dropdownMenu button[data-action]').forEach(btn=>{
-    btn.onclick = (e)=> { 
-      const action = e.target.dataset.action;
-      if(action === 'converter') showConverter();
-      else if(action === 'favorites') { currentTab='recipes'; render(); filterFavorites(); }
-      else if(action === 'random') randomRecipe();
-      document.getElementById('dropdownMenu').classList.remove('open');
+  // Дополнительные табы (второй слой)
+  document.querySelectorAll('.sub-menu button.sub-tab-btn[data-subtab]').forEach(btn=>{
+    btn.onclick = ()=> { 
+      const subtab = btn.dataset.subtab;
+      if (subtab === 'random') {
+        // Случайный рецепт сразу открывается
+        randomRecipe();
+        return;
+      }
+      if (currentSubTab === subtab) {
+        currentSubTab = 'none';
+      } else {
+        currentSubTab = subtab;
+      }
+      render(); 
     };
   });
   
@@ -972,6 +1200,16 @@ function attachEvents() {
         toast('День очищен');
       }
     }
+  });
+  
+  // Converter events
+  document.getElementById('convCalc')?.addEventListener('click', ()=>{
+    const val = parseFloat(document.getElementById('convVal').value)||0;
+    const from = document.getElementById('convFrom').value;
+    const to = document.getElementById('convTo').value;
+    const units = { g:1, ml:1, cup:240, tbsp:15, tsp:5, pcs:1 };
+    const result = val * (units[from]/units[to]);
+    document.getElementById('convResult').textContent = `${val} ${from} → ${result.toFixed(2)} ${to}`;
   });
   
   // Timer
@@ -1100,17 +1338,14 @@ function showRecipeDialog(id=null) {
     if (ingText.trim()) {
       ingText.split('\n').filter(l=>l.trim()).forEach(line => {
         const parts = line.trim().split(' ');
-        // Ищем последнее слово - это может быть единица измерения
         let unit = '';
         let amount = '';
         let nameParts = [];
         
-        // Проверяем, есть ли в конце единица измерения
         const lastWord = parts[parts.length - 1];
         const units = ['г','кг','мл','л','шт','ст.л','ч.л','стакан','стакана','стаканов','кусок','куска','зубчик','зубчика','щепотка','щепотки'];
         if (units.some(u => lastWord.toLowerCase().includes(u))) {
           unit = lastWord;
-          // Предпоследнее слово - это количество
           if (parts.length >= 2) {
             amount = parts[parts.length - 2];
             nameParts = parts.slice(0, parts.length - 2);
@@ -1118,7 +1353,6 @@ function showRecipeDialog(id=null) {
             nameParts = parts.slice(0, parts.length - 1);
           }
         } else {
-          // Если единицы нет, пробуем найти число в конце
           const lastWordIsNumber = !isNaN(parseFloat(lastWord));
           if (lastWordIsNumber && parts.length >= 2) {
             amount = lastWord;
@@ -1146,7 +1380,6 @@ function showRecipeDialog(id=null) {
     }
     
     if(rec) {
-      // Обновляем существующий рецепт
       rec.name = name;
       rec.category = category;
       rec.time = time;
@@ -1156,7 +1389,6 @@ function showRecipeDialog(id=null) {
       rec.photo = photo;
       toast('✅ Рецепт обновлён');
     } else {
-      // Создаём новый рецепт
       const newRecipe = { 
         id: genId(), 
         name, 
@@ -1276,46 +1508,6 @@ function startTimer() {
 }
 function stopTimer() { clearInterval(timerInterval); timerInterval=null; }
 function resetTimer() { stopTimer(); timerSeconds=0; updateTimerDisplay(); }
-
-// ============================================================
-// CONVERTER
-// ============================================================
-function showConverter() {
-  const html = `<div class="dialog-overlay" id="convOverlay"><div class="dialog-content"><h2>Конвертер мер</h2>
-    <input id="convVal" placeholder="Количество" type="number" value="1">
-    <select id="convFrom">
-      <option value="g">Граммы</option>
-      <option value="ml">Миллилитры</option>
-      <option value="cup">Стаканы</option>
-      <option value="tbsp">Ст. ложки</option>
-      <option value="tsp">Ч. ложки</option>
-      <option value="pcs">Штуки</option>
-    </select>
-    <select id="convTo">
-      <option value="g">Граммы</option>
-      <option value="ml">Миллилитры</option>
-      <option value="cup">Стаканы</option>
-      <option value="tbsp">Ст. ложки</option>
-      <option value="tsp">Ч. ложки</option>
-      <option value="pcs">Штуки</option>
-    </select>
-    <button id="convCalc">Рассчитать</button>
-    <p id="convResult" style="text-align:center;margin:12px 0;font-weight:700;"></p>
-    <button class="btn-secondary" id="convClose">Закрыть</button>
-  </div></div>`;
-  document.body.insertAdjacentHTML('beforeend', html);
-  
-  document.getElementById('convCalc').onclick = ()=>{
-    const val = parseFloat(document.getElementById('convVal').value)||0;
-    const from = document.getElementById('convFrom').value;
-    const to = document.getElementById('convTo').value;
-    const units = { g:1, ml:1, cup:240, tbsp:15, tsp:5, pcs:1 };
-    const result = val * (units[from]/units[to]);
-    document.getElementById('convResult').textContent = `${val} → ${result.toFixed(2)}`;
-  };
-  document.getElementById('convClose').onclick = ()=> document.getElementById('convOverlay')?.remove();
-  document.getElementById('convOverlay').onclick = (e)=> { if(e.target===e.currentTarget) e.target.remove(); };
-}
 
 // ============================================================
 // QR
